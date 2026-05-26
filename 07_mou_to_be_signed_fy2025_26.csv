@@ -1,0 +1,41 @@
+sub_category,sno,scheme,state,district,camp_id,nob,noa,value_inr
+RVY,1,RVY,Delhi,North West Delhi,BNP25,290,1753,2274560
+RVY,2,RVY,Delhi,East Delhi,EAS25,683,3885,4997432.89
+RVY-AASRA,1,RVY-AASRA,Haryana,Sonipat,AKU25,30,143,203876
+RVY-AASRA,2,RVY-AASRA,Haryana,Panipat,AXL25,47,252,321010
+RVY-AASRA,3,RVY-AASRA,Haryana,Panipat,OCB25,226,1227,1965201
+RVY-AASRA,4,RVY-AASRA,Delhi,Karawal Nagar / Yamuna Nagar,NOB25,610,3294,4929702
+RVY-AASRA,5,RVY-AASRA,Uttar Pradesh,Ghaziabad,EEG25,88,477,676734
+ADIP,1,ADIP,Delhi,North West Delhi,BNM25,145,235,2927099
+ADIP,2,ADIP,Delhi,East Delhi,EAA24,65,137,1344584
+ADIP,3,ADIP-PMDK RMC Delhi,Delhi,Delhi,JAN25,62,170,1007336
+ADIP,4,ADIP-PMDK Noida,Uttar Pradesh,Bulandshahr,DBB25,122,215,2617017
+ADIP-AASRA,1,ADIP-AASRA,Haryana,Panipat,FAF24,11,14,133730
+ADIP-AASRA,2,ADIP-AASRA,Haryana,Panipat,BNB25,34,56,1067154
+ADIP-AASRA,3,ADIP-AASRA Delhi Maa Shakti,Delhi,Geeta Bal / Godi Colony,CFC25,7,12,75844
+PMDK-RVY,1,PMDK NUH-RVY,Haryana,Rewari,AXD25,8,47,80075
+PMDK-RVY,2,PMDK NUH-RVY,Haryana,Rewari,NAB25,32,165,250080
+PMDK-RVY,3,PMDK NUH-RVY,Haryana,Nuh,NAB25,182,947,1594627
+PMDK-RVY,4,PMDK RMC Delhi RVY,Delhi,Delhi,EXM25,139,675,881559
+PMDK-RVY,5,PMDK Mahendragarh-RVY,Haryana,Mahendragarh,EOV25,126,710,1251957
+PMDK-RVY,6,PMDK Mahendragarh-RVY,Haryana,Rewari,EOJ25,229,1295,2277039
+PMDK-RVY,7,PMDK Mahendragarh-RVY,Haryana,Charkhi Dadri,ZZL25,327,1767,2685943
+PMDK-RVY,8,PMDK Karnal-RVY,Haryana,Rohtak,ESL25,235,1350,2096802
+PMDK-RVY,9,PMDK Noida-RVY,Uttar Pradesh,Ghaziabad (Muradnagar),DBC25,85,475,752848
+PMDK-RVY,10,PMDK Noida-RVY,Uttar Pradesh,Bulandshahr,DBC25,194,1120,1895714
+PMDK-RVY,11,PMDK Meerut-RVY,Uttar Pradesh,Shamli (Kairana),MRS25,127,686,1056911
+PMDK-RVY,12,PMDK Meerut-RVY,Uttar Pradesh,Shamli (Lak),MRS25,120,652,1021915
+PMDK-RVY,13,PMDK Meerut-RVY,Uttar Pradesh,Shamli (Bhaiswal),MRS25,111,599,903471
+PMDK-RVY,14,PMDK Meerut-RVY,Uttar Pradesh,Shamli (Hiranwara),MRS25,84,446,688435
+SSA-ADIP,1,SSA-ADIP,Delhi,12 Districts,,1445,2292,18542587
+SSS,1,SSS,Delhi,South West,SSW25,67,96,1073757
+SSS,2,SSS,Delhi,North West,SSM25,137,351,2223642
+SSS,3,SSS,Delhi,Central,SSN25,21,45,387875
+SSS,4,SSS,Delhi,North West,SSO25,9,16,145569
+SSS,5,SSS,Delhi,South East,KAS25,42,81,719463
+CSR-Dist-Pending,1,CSR-APCPL (Divyangjan),Haryana,Bhiwani,EKM25,373,738,18257859
+CSR-Dist-Pending,2,CSR-APCPL (Sr. Citizens),Haryana,Bhiwani,ELF25,419,2374,3975544
+CSR-Dist-Pending,3,CSR-APCPL (Divyangjan),Haryana,Jhajjar,EKX25,PENDING,PENDING,
+CSR-Dist-Pending,4,CSR-DTL (Divyangjan) Under RMC Delhi,Delhi,Delhi,ETL25,,,
+CSR-Dist-Pending,5,CSR-IOCL Refinery (Sonipat) MTC,Haryana,Sonipat,IOS25,100,100,6000000
+CSR-Dist-Pending,6,CSR-NPCIL,Uttar Pradesh,Bulandshahr,ENK25,80,112,4673370
