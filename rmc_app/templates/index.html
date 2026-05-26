@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RMC Delhi — CSR Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#06101f;--card:#0d1b2e;--el:#13253d;--hov:#192f4a;--gold:#f5a623;--red:#ef4444;--green:#22c55e;--blue:#3b82f6;--amber:#f59e0b;--orange:#f97316;--txt:#f0f6ff;--txt2:#8faac8;--txt3:#3d5a7a;--bdr:#1a3050;--bdr2:#2a5080;--sw:218px}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans',sans-serif}
+/* SIDEBAR */
+#sb{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:18px 16px;border-bottom:1px solid var(--bdr)}
+.sb-logo .lt{font-family:'Bebas Neue';font-size:19px;color:var(--gold);letter-spacing:1.5px;line-height:1}
+.sb-logo .ls{font-size:9px;color:var(--txt3);letter-spacing:.8px;margin-top:2px;text-transform:uppercase}
+.sb-logo .lh{font-size:11px;color:var(--txt2);margin-top:8px;line-height:1.5;border-left:2px solid var(--gold);padding-left:8px}
+nav{flex:1;padding:8px 0;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;font-size:12.5px;color:var(--txt3);user-select:none}
+.ni:hover{background:var(--el);color:var(--txt2);border-left-color:var(--bdr2)}
+.ni.active{background:var(--el);color:var(--gold);border-left-color:var(--gold);font-weight:600}
+.ni .ico{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.ni .lbl{flex:1}
+.nbdg{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;font-family:'IBM Plex Mono';letter-spacing:.3px}
+.nbdg.rd{background:var(--red);color:#fff}.nbdg.gd{background:var(--gold);color:#000}.nbdg.bl{background:var(--blue);color:#fff}.nbdg.gr{background:var(--green);color:#000}
+.sb-ft{padding:12px 16px;border-top:1px solid var(--bdr);font-size:9.5px;color:var(--txt3);line-height:1.8}
+.sb-ft .dt{font-family:'IBM Plex Mono';color:var(--gold);font-size:10px;margin-bottom:2px}
+/* MAIN */
+#main{margin-left:var(--sw);min-height:100vh;display:flex;flex-direction:column}
+/* TOPBAR */
+#top{background:var(--card);border-bottom:1px solid var(--bdr);padding:14px 22px}
+.top-row1{display:flex;align-items:center;gap:20px;margin-bottom:13px}
+.top-title{font-family:'Bebas Neue';font-size:21px;letter-spacing:2px;flex-shrink:0}
+.top-title span{color:var(--gold)}
+.tp-wrap{flex:1;max-width:420px}
+.tp-top{display:flex;justify-content:space-between;font-size:9.5px;color:var(--txt3);margin-bottom:5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.tp-pct{font-family:'IBM Plex Mono';color:var(--gold)}
+.tp-bar{height:7px;background:var(--el);border-radius:4px;overflow:hidden}
+.tp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#22c55e,#f5a623);transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--el);border:1px solid var(--bdr);border-radius:7px;padding:11px 14px;position:relative;overflow:hidden;cursor:default}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.gd::before{background:var(--gold)}.kpi.gr::before{background:var(--green)}.kpi.bl::before{background:var(--blue)}.kpi.rd::before{background:var(--red)}
+.kpi-lbl{font-size:9px;color:var(--txt3);letter-spacing:.8px;text-transform:uppercase;font-weight:600;margin-bottom:3px}
+.kpi-v{font-family:'Bebas Neue';font-size:27px;line-height:1;letter-spacing:.5px}
+.kpi-v small{font-size:11px;font-family:'IBM Plex Sans';color:var(--txt2);font-weight:400;margin-left:3px}
+.kpi-sub{font-size:10px;color:var(--txt2);margin-top:2px}
+/* CONTENT */
+#content{flex:1;padding:20px 22px;overflow-y:auto}
+.tab{display:none;animation:fi .2s ease}.tab.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+/* SECTION */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.stitle{font-family:'Bebas Neue';font-size:18px;letter-spacing:1.5px}.stitle span{color:var(--gold)}
+/* FILTERS */
+.frow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.btn{padding:5px 12px;border-radius:4px;border:1px solid var(--bdr);background:var(--el);color:var(--txt2);font-size:11.5px;cursor:pointer;transition:all .12s;font-family:'IBM Plex Sans';font-weight:500}
+.btn:hover{border-color:var(--bdr2);color:var(--txt)}.btn.on{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.btn.dr{border-color:#7f1d1d;color:var(--red)}.btn.dr.on{background:var(--red);border-color:var(--red);color:#fff}
+.sep{width:1px;height:22px;background:var(--bdr)}
+.srch{position:relative;flex:1;max-width:220px}
+.srch input{width:100%;background:var(--el);border:1px solid var(--bdr);border-radius:4px;padding:5px 10px 5px 28px;color:var(--txt);font-size:11.5px;font-family:'IBM Plex Sans';outline:none;transition:border-color .15s}
+.srch input:focus{border-color:var(--bdr2)}.srch::before{content:'⌕';position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:14px;pointer-events:none}
+/* CARDS GRID */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin-bottom:20px}
+.mcard{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px;transition:all .15s;cursor:default}
+.mcard:hover{border-color:var(--bdr2);transform:translateY(-1px)}
+.mcard.exp{border-color:#7f1d1d;animation:pb 2s infinite}
+.mcard.xpd{border-color:var(--red);background:linear-gradient(135deg,var(--card),#100505)}
+@keyframes pb{0%,100%{border-color:#7f1d1d}50%{border-color:var(--red)}}
+.ct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:7px}
+.cname{font-weight:700;font-size:13px;flex:1;line-height:1.3}.cval{font-family:'Bebas Neue';font-size:21px;color:var(--gold);text-align:right;white-space:nowrap}
+.cval small{font-family:'IBM Plex Sans';font-size:10px;color:var(--txt2);display:block;text-align:right}
+.cloc{font-size:10.5px;color:var(--txt3);margin-bottom:7px}
+.cmeta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.bdg.gr{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.bdg.am{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.bdg.rd{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.bdg.bl{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.bdg.or{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+.bdg.pu{animation:bpu 1.5s infinite}.bdg.cl{cursor:pointer}
+@keyframes bpu{0%,100%{opacity:1}50%{opacity:.3}}
+.cdate{font-family:'IBM Plex Mono';font-size:9px;color:var(--txt3)}
+.fyb{font-size:8.5px;padding:1px 5px;border-radius:2px;background:var(--el);color:var(--txt3);border:1px solid var(--bdr)}
+/* STATS ROW */
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.sbox{background:var(--el);border:1px solid var(--bdr);border-radius:6px;padding:12px;text-align:center}
+.snum{font-family:'Bebas Neue';font-size:23px;color:var(--gold)}.slbl{font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+/* CHARTS */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.crow.w{grid-template-columns:1fr}.crow.t3{grid-template-columns:1fr 1fr 1fr}
+.cbox{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px}
+.cbox.span2{grid-column:span 2}
+.ctitle{font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.ctitle::before{content:'';display:block;width:3px;height:11px;background:var(--gold);border-radius:2px;flex-shrink:0}
+canvas{max-height:200px}
+/* TABLE */
+.tw{background:var(--card);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;margin-bottom:18px;overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{background:var(--el);color:var(--txt3);padding:9px 11px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;border-bottom:1px solid var(--bdr)}
+.tbl td{padding:9px 11px;border-bottom:1px solid rgba(26,48,80,.5);vertical-align:middle}
+.tbl tr:hover td{background:var(--el)}.tbl tr:last-child td{border-bottom:none}
+/* SUBTABS */
+.stabs{display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--bdr)}
+.stb{padding:7px 14px;font-size:11.5px;cursor:pointer;color:var(--txt3);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500;transition:all .12s}
+.stb.on{color:var(--gold);border-bottom-color:var(--gold)}.stb:hover{color:var(--txt2)}
+/* PRIORITY BOX */
+.pri{background:linear-gradient(135deg,rgba(245,166,35,.05),transparent);border:1px solid rgba(245,166,35,.15);border-radius:8px;padding:14px;margin-bottom:16px}
+.pri-t{font-family:'Bebas Neue';font-size:14px;color:var(--gold);letter-spacing:.8px;margin-bottom:10px}
+.pri-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.pri-i{background:var(--el);border:1px solid var(--bdr);border-radius:5px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center}
+.pi-n{font-size:11px;font-weight:600;flex:1;margin-right:8px}.pi-v{font-family:'Bebas Neue';font-size:17px;color:var(--gold)}
+/* MODAL */
+#mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#mo.open{display:flex}
+#mpanel{background:var(--card);border:1px solid var(--bdr2);border-radius:10px;padding:22px;max-width:480px;width:92%;position:relative}
+.mclose{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--txt2);font-size:17px;cursor:pointer;padding:3px 7px}
+.mclose:hover{color:var(--red)}.mco{font-family:'Bebas Neue';font-size:20px;color:var(--gold);letter-spacing:1px;margin-bottom:2px}
+.mmt{font-size:10.5px;color:var(--txt2);margin-bottom:13px;font-family:'IBM Plex Mono'}
+.mei{display:flex;gap:14px;padding:9px 11px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:6px;margin-bottom:13px}
+.mei div{font-size:10px}.mei .ml{color:var(--txt3);margin-bottom:1px}.mei .mv{font-family:'IBM Plex Mono';color:var(--red);font-weight:600}
+.msteps{display:flex;flex-direction:column;gap:6px}
+.mst{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--el);border-radius:5px;border:1px solid var(--bdr);cursor:pointer;transition:all .12s}
+.mst:hover{border-color:var(--bdr2)}.mst.done{background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.2)}
+.mst input{accent-color:var(--green);width:14px;height:14px}.mst-t{font-size:12px;flex:1}
+.mst.done .mst-t{color:var(--green);text-decoration:line-through;opacity:.6}
+/* WATERFALL */
+.wf{display:flex;flex-direction:column;gap:2px;margin:10px 0}
+.wfi{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--el);border:1px solid var(--bdr)}
+.wfi:first-child{border-radius:6px 6px 0 0}.wfi:last-child{border-radius:0 0 6px 6px}
+.wfl{flex:1;font-size:11.5px;font-weight:500}.wfbw{width:190px;height:8px;background:var(--bg);border-radius:3px;overflow:hidden}
+.wfb{height:100%;border-radius:3px;transition:width 1.2s ease}.wfv{font-family:'Bebas Neue';font-size:16px;color:var(--gold);min-width:70px;text-align:right}
+.wfp{font-size:10px;color:var(--txt3);min-width:42px;text-align:right}.wfi.hl{background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.2)}
+/* ALERT CARDS */
+.alc{display:flex;gap:11px;background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:13px;margin-bottom:9px;border-left:3px solid var(--bdr);transition:all .12s}
+.alc.ur{border-left-color:var(--red)}.alc.hi{border-left-color:var(--amber)}.alc.me{border-left-color:var(--blue)}.alc.op{border-left-color:var(--green)}.alc.done{opacity:.35}
+.al-ic{font-size:18px;flex-shrink:0}.al-b{flex:1}.al-t{font-weight:600;font-size:12.5px;margin-bottom:3px}.al-d{font-size:11px;color:var(--txt2);line-height:1.5}
+.al-ac{display:flex;align-items:center;gap:7px;margin-top:7px}
+.apr{font-size:9px;padding:2px 7px;border-radius:2px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.apr.ur{background:rgba(239,68,68,.15);color:var(--red)}.apr.hi{background:rgba(245,158,11,.15);color:var(--amber)}.apr.me{background:rgba(59,130,246,.15);color:var(--blue)}.apr.op{background:rgba(34,197,94,.15);color:var(--green)}
+.abtn{padding:3px 9px;border-radius:3px;border:1px solid var(--bdr);background:var(--el);color:var(--txt2);font-size:9.5px;cursor:pointer;font-weight:600;transition:all .12s}
+.abtn:hover{border-color:var(--green);color:var(--green)}.abtn.done{border-color:rgba(34,197,94,.35);color:var(--green)}
+.al-amt{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--gold)}
+/* PARTNER CARD */
+.pcard{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:13px;transition:all .12s}
+.pcard:hover{border-color:var(--bdr2)}.pc-t{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.pc-n{font-weight:600;font-size:12.5px;flex:1}.pc-v{font-family:'Bebas Neue';font-size:18px;color:var(--gold)}
+.pc-m{font-size:9.5px;color:var(--txt3);margin-bottom:7px}.pc-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+.pc-info{text-align:center}.pc-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;margin-bottom:2px}.pc-num{font-size:12px;font-weight:600}
+.contact-row{font-size:10px;color:var(--txt2);margin-top:7px;border-top:1px solid var(--bdr);padding-top:7px;display:flex;gap:10px;flex-wrap:wrap}
+/* GAUGE */
+#gauge-svg{display:block;margin:0 auto}
+/* HEALTH BOX */
+#hbox{padding:12px 14px;border-radius:7px;margin-bottom:16px;font-family:'IBM Plex Mono';font-size:12.5px;border:1px solid var(--bdr)}
+/* MISC */
+.divr{height:1px;background:var(--bdr);margin:16px 0}
+.empty{text-align:center;padding:36px 20px;color:var(--txt3);font-size:12px}.empty .ei{font-size:30px;margin-bottom:8px}
+.loading{text-align:center;padding:40px;color:var(--txt3);font-family:'IBM Plex Mono';font-size:11px}
+select{background:var(--el);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:4px;font-size:11.5px;font-family:'IBM Plex Sans';outline:none}
+select:focus{border-color:var(--bdr2)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--el);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sb-logo">
+    <div class="lt">RMC DELHI</div>
+    <div class="ls">CSR Intelligence System</div>
+    <div class="lh">HOD: Mr. Pankaj Kumar Dwivedi</div>
+  </div>
+  <nav>
+    <div class="ni active" data-tab="t1"><span class="ico">📋</span><span class="lbl">MoU Signed Tracker</span><span class="nbdg rd" id="b-exp">0</span></div>
+    <div class="ni" data-tab="t2"><span class="ico">🔄</span><span class="lbl">Under Consideration</span><span class="nbdg bl" id="b-uc">—</span></div>
+    <div class="ni" data-tab="t3"><span class="ico">🏢</span><span class="lbl">Potential Partners</span><span class="nbdg gd" id="b-pt">—</span></div>
+    <div class="ni" data-tab="t4"><span class="ico">📊</span><span class="lbl">Summary & Progress</span></div>
+    <div class="ni" data-tab="t5"><span class="ico">⚡</span><span class="lbl">Action Centre</span><span class="nbdg rd" id="b-ac">—</span></div>
+  </nav>
+  <div class="sb-ft">
+    <div class="dt" id="sbdt"></div>
+    FY 2026-27 | Target ₹100 Crore<br>Confidential — Internal Use Only
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="top">
+    <div class="top-row1">
+      <div class="top-title">RMC DELHI — <span>CSR Intelligence Dashboard</span></div>
+      <div class="tp-wrap">
+        <div class="tp-top"><span>FY 2026-27 TARGET PROGRESS</span><span class="tp-pct" id="tp-pct">Loading…</span></div>
+        <div class="tp-bar"><div class="tp-fill" id="tp-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi gd"><div class="kpi-lbl">MoUs Signed 2025-26</div><div class="kpi-v" id="k1">—</div><div class="kpi-sub" id="k1s"></div></div>
+      <div class="kpi gr"><div class="kpi-lbl">MoUs Signed 2026-27</div><div class="kpi-v" id="k2">—</div><div class="kpi-sub" id="k2s"></div></div>
+      <div class="kpi bl"><div class="kpi-lbl">Under Consideration 26-27</div><div class="kpi-v" id="k3">—</div><div class="kpi-sub" id="k3s"></div></div>
+      <div class="kpi rd"><div class="kpi-lbl">⚠ Expiring within 1 Year</div><div class="kpi-v" id="k4">—</div><div class="kpi-sub">Immediate action required</div></div>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- TAB 1: MOU SIGNED -->
+    <div class="tab active" id="t1">
+      <div class="sh"><div class="stitle">MoU <span>Signed Tracker</span></div></div>
+      <div class="frow">
+        <button class="btn on" data-fy="both">Both FYs</button>
+        <button class="btn" data-fy="2526">FY 2025-26</button>
+        <button class="btn" data-fy="2627">FY 2026-27</button>
+        <div class="sep"></div>
+        <button class="btn on2" data-srt="value">Value ↓</button>
+        <button class="btn" data-srt="date">Date</button>
+        <button class="btn dr" data-srt="expiry">Expiry Risk</button>
+        <div class="srch"><input id="ms-q" placeholder="Search company…" oninput="renderMouCards()"></div>
+      </div>
+      <div class="cgrid" id="mou-cards"><div class="loading">Loading…</div></div>
+      <div class="srow" id="mou-stats"></div>
+      <div class="crow">
+        <div class="cbox span2"><div class="ctitle">MoU Value by Company (₹ Lakhs) — Top 15</div><canvas id="ch-bar" style="max-height:220px"></canvas></div>
+      </div>
+      <div class="crow">
+        <div class="cbox"><div class="ctitle">Payment Status Breakdown</div><canvas id="ch-pay"></canvas></div>
+        <div class="cbox"><div class="ctitle">Signing Activity by Month</div><canvas id="ch-time"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: UNDER CONSIDERATION -->
+    <div class="tab" id="t2">
+      <div class="sh"><div class="stitle">MoU <span>Under Consideration</span></div></div>
+      <div class="stabs">
+        <div class="stb on" data-uct="2627">2026-27 Active Pipeline</div>
+        <div class="stb" data-uct="2526">2025-26 Carryforward</div>
+      </div>
+      <div class="pri"><div class="pri-t">🎯 Priority Targets — Top 5 by Value</div><div class="pri-g" id="pri-list"></div></div>
+      <div class="cgrid" id="uc-cards"><div class="loading">Loading…</div></div>
+      <div class="crow">
+        <div class="cbox"><div class="ctitle">Value by Stage</div><canvas id="ch-stage"></canvas></div>
+        <div class="cbox"><div class="ctitle">Top Prospects (₹ Lakhs)</div><canvas id="ch-ucbar"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: POTENTIAL PARTNERS -->
+    <div class="tab" id="t3">
+      <div class="sh">
+        <div class="stitle">Potential <span>CSR Partners</span></div>
+        <div style="font-size:10px;color:var(--txt3)">Companies in RMC Delhi's outreach network</div>
+      </div>
+      <div class="frow">
+        <select id="type-f" onchange="renderPartners()"><option value="">All Types</option><option>CPSE</option><option>PRIVATE</option></select>
+        <div class="srch"><input id="pt-q" placeholder="Search company…" oninput="renderPartners()"></div>
+      </div>
+      <div class="cgrid" id="pt-cards"><div class="loading">Loading…</div></div>
+      <div class="crow">
+        <div class="cbox"><div class="ctitle">Top 10 by Available CSR Budget (₹ Lakhs)</div><canvas id="ch-ptbar"></canvas></div>
+        <div class="cbox"><div class="ctitle">CPSE vs Private Companies</div><canvas id="ch-ptdnt"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: SUMMARY -->
+    <div class="tab" id="t4">
+      <div class="sh"><div class="stitle">Summary <span>& Progress</span></div></div>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:18px;margin-bottom:20px">
+        <div class="cbox" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="ctitle" style="width:100%">FY 2026-27 Gauge</div>
+          <svg id="gauge-svg" viewBox="0 0 200 120" width="190"></svg>
+          <div style="text-align:center;margin-top:6px">
+            <div style="font-family:'Bebas Neue';font-size:26px;color:var(--gold)" id="g-val">—</div>
+            <div style="font-size:10px;color:var(--txt3)" id="g-rem"></div>
+          </div>
+        </div>
+        <div>
+          <div class="ctitle" style="margin-bottom:8px">Pipeline Waterfall</div>
+          <div class="wf" id="wfall"></div>
+        </div>
+      </div>
+      <div class="stitle" style="font-size:15px;margin-bottom:11px">Stage-wise Summary</div>
+      <div class="tw"><table class="tbl" id="sum-tbl"></table></div>
+      <div class="crow">
+        <div class="cbox"><div class="ctitle">Payment Health</div><canvas id="ch-ph"></canvas></div>
+        <div class="cbox"><div class="ctitle">MoU Signing Timeline</div><canvas id="ch-tl"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TAB 5: ACTIONS -->
+    <div class="tab" id="t5">
+      <div class="sh">
+        <div class="stitle">Action <span>Centre</span></div>
+        <div class="frow" style="margin:0">
+          <button class="btn on" data-af="all">All</button>
+          <button class="btn dr" data-af="ur">🔴 Urgent</button>
+          <button class="btn" data-af="hi">🟡 High</button>
+          <button class="btn" data-af="me">🔵 Medium</button>
+          <button class="btn" data-af="op">🟢 Opportunities</button>
+        </div>
+      </div>
+      <div id="hbox">Loading pipeline health…</div>
+      <div id="al-cnt"><div class="loading">Generating alerts from your data…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="mo" onclick="if(event.target===this)closeMo()">
+  <div id="mpanel">
+    <button class="mclose" onclick="closeMo()">✕</button>
+    <div class="mco" id="mo-co"></div>
+    <div class="mmt" id="mo-mt"></div>
+    <div class="mei" id="mo-ei"></div>
+    <div style="font-size:9px;color:var(--txt3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Required Actions — tick when complete:</div>
+    <div class="msteps" id="mo-st"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════ UTILITIES ════════════════════════════
+const fL = v => v == null ? '—' : v >= 100 ? `₹${(v/100).toFixed(2)} Cr` : `₹${Number(v).toFixed(2)} L`;
+const fD = s => s || '—';
+const norm = s => s ? s.toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim() : '';
+const G = id => document.getElementById(id);
+const charts = {};
+const dch = id => { if(charts[id]){ charts[id].destroy(); delete charts[id]; } };
+
+function payBadge(ps){
+  if(!ps) return {cls:'rd',lbl:'Payment Pending'};
+  if(ps.includes('Final') && !ps.includes('Pending')) return {cls:'gr',lbl:'✓ Final Received'};
+  if(ps.includes('1st')) return {cls:'am',lbl:'1st Inst. Received'};
+  if(ps.includes('2nd')||ps.includes('MTC')||ps.includes('Payment Received')) return {cls:'am',lbl:'Partial Received'};
+  if(ps.toLowerCase().includes('pending')) return {cls:'rd',lbl:'Pending'};
+  return {cls:'am',lbl:ps.substring(0,25)};
+}
+function remBadge(r){
+  if(!r) return {cls:'bl',lbl:'No Status'};
+  if(r.includes('Denied')) return {cls:'rd',lbl:'✗ Denied'};
+  if(r.toLowerCase().includes('to be signed')) return {cls:'or',lbl:'To Be Signed'};
+  if(r.toLowerCase().includes('followup')||r.toLowerCase().includes('follow up')) return {cls:'am',lbl:'Followup Active'};
+  return {cls:'bl',lbl:'Proposal Submitted'};
+}
+
+// ═══════════════════════ STATE ════════════════════════════════
+let FY='both', SRT='value', UCT='2627', ALF='all';
+let mouAll=[], ucData={}, partnerData=[], allAlerts=[];
+
+// ═══════════════════════ INIT ═════════════════════════════════
+window.onload = async () => {
+  updateTime(); setInterval(updateTime, 60000);
+  await loadAll();
+};
+
+function updateTime(){
+  G('sbdt').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+}
+
+async function api(ep){
+  try { const r = await fetch(ep); if(!r.ok) throw new Error(r.status); return await r.json(); }
+  catch(e){ console.error('API error', ep, e); return null; }
+}
+
+async function loadAll(){
+  // Fetch all data in parallel
+  const [m25, m26, uc26, uc25, dd, sm, pt] = await Promise.all([
+    api('/api/mou-signed/2526'),
+    api('/api/mou-signed/2627'),
+    api('/api/under-consideration/2627'),
+    api('/api/under-consideration/2526'),
+    api('/api/distribution-done'),
+    api('/api/summary'),
+    api('/api/potential-companies'),
+  ]);
+
+  mouAll = [...(m25||[]).map(r=>({...r,fy:'2526'})), ...(m26||[]).map(r=>({...r,fy:'2627'}))];
+  ucData = { '2627': uc26||[], '2526': uc25||[] };
+  partnerData = pt||[];
+
+  // KPIs
+  const t25  = (m25||[]).reduce((a,x)=>a+(x.value_lakhs||0),0);
+  const t26  = (m26||[]).reduce((a,x)=>a+(x.value_lakhs||0),0);
+  const tuc  = (uc26||[]).reduce((a,x)=>a+(x.value_lakhs||0),0);
+  const exp  = mouAll.filter(x=>['expiring','expired'].includes(x.status)).length;
+  const pct  = Math.min(t26/10000*100,100);
+
+  G('k1').innerHTML=`${(m25||[]).length}<small>MoUs</small>`; G('k1s').textContent=`Total: ${fL(t25)}`;
+  G('k2').innerHTML=`${(m26||[]).length}<small>MoUs</small>`; G('k2s').textContent=`Total: ${fL(t26)}`;
+  G('k3').innerHTML=`${(uc26||[]).length}<small>Companies</small>`; G('k3s').textContent=`Potential: ${fL(tuc)}`;
+  G('k4').innerHTML=`${exp}<small>MoUs</small>`;
+  G('tp-fill').style.width=pct+'%';
+  G('tp-pct').textContent=`₹${(t26/100).toFixed(2)} Cr / ₹100 Cr`;
+  G('b-exp').textContent=exp;
+  G('b-uc').textContent=(uc26||[]).length;
+  G('b-pt').textContent=(pt||[]).length;
+
+  renderMouCards(); renderMouCharts();
+  renderUC();
+  renderPartners(); renderPartnerCharts();
+  renderSummary(sm, t26, tuc, (uc25||[]).reduce((a,x)=>a+(x.value_lakhs||0),0));
+  buildAlerts();
+}
+
+// ═══════════════════════ TAB 1 ════════════════════════════════
+// FY filter buttons
+document.querySelectorAll('[data-fy]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-fy]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); FY=b.dataset.fy; renderMouCards(); renderMouCharts();
+});
+// Sort buttons
+document.querySelectorAll('[data-srt]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-srt]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); SRT=b.dataset.srt; renderMouCards();
+});
+
+function getMouFiltered(){
+  let d = mouAll.filter(r => FY==='both' || r.fy===FY);
+  const q = (G('ms-q')?.value||'').toLowerCase();
+  if(q) d = d.filter(r=>(r.cpse||'').toLowerCase().includes(q)||(r.locations||'').toLowerCase().includes(q));
+  if(SRT==='value') d.sort((a,b)=>b.value_lakhs-a.value_lakhs);
+  else if(SRT==='date') d.sort((a,b)=>{ if(!a.mou_date)return 1; if(!b.mou_date)return-1; return b.mou_date.localeCompare(a.mou_date); });
+  else if(SRT==='expiry'){ const o={expired:0,expiring:1,ok:2,unknown:3}; d.sort((a,b)=>(o[a.status]||3)-(o[b.status]||3)); }
+  return d;
+}
+
+function renderMouCards(){
+  const d = getMouFiltered();
+  const c = G('mou-cards');
+  if(!d.length){ c.innerHTML='<div class="empty"><div class="ei">📋</div>No MoUs found</div>'; return; }
+  c.innerHTML = d.map(m=>{
+    const pay = payBadge(m.payment_status);
+    const v = m.value_lakhs||0;
+    let expBdg = '';
+    if(m.status==='expired')
+      expBdg=`<span class="bdg rd pu cl" onclick="openMo('${(m.cpse||'').replace(/'/g,"\\'")}','${m.mou_date||''}','${m.expiry||''}','${m.days_left}')">🔴 EXPIRED — Click for Actions</span>`;
+    else if(m.status==='expiring')
+      expBdg=`<span class="bdg rd pu cl" onclick="openMo('${(m.cpse||'').replace(/'/g,"\\'")}','${m.mou_date||''}','${m.expiry||''}','${m.days_left}')">⚠ EXPIRING IN ${m.days_left}d</span>`;
+    return `<div class="mcard ${m.status==='expired'?'xpd':m.status==='expiring'?'exp':''}">
+      <div class="ct">
+        <div><div class="cname">${m.cpse||'—'}</div></div>
+        <div><div class="cval">${v>=100?`${(v/100).toFixed(2)}<small>Crore</small>`:`${v.toFixed(2)}<small>Lakhs</small>`}</div><span class="fyb">FY ${m.fy==='2526'?'25-26':'26-27'}</span></div>
+      </div>
+      <div class="cloc">📍 ${m.locations||'—'}</div>
+      <div class="cmeta">
+        <span class="bdg ${pay.cls}">${pay.lbl}</span>
+        <span class="cdate">📅 ${fD(m.mou_date)}</span>
+        ${m.expiry?`<span class="cdate">⏳ Exp: ${m.expiry}</span>`:''}
+        ${expBdg}
+      </div>
+    </div>`;
+  }).join('');
+
+  const tot = d.reduce((a,x)=>a+x.value_lakhs,0);
+  const fin = d.filter(x=>payBadge(x.payment_status).cls==='gr').reduce((a,x)=>a+x.value_lakhs,0);
+  const pnd = d.filter(x=>payBadge(x.payment_status).cls==='rd').reduce((a,x)=>a+x.value_lakhs,0);
+  const ec  = d.filter(x=>['expiring','expired'].includes(x.status)).length;
+  G('mou-stats').innerHTML=`
+    <div class="sbox"><div class="snum">${fL(tot)}</div><div class="slbl">Total Value</div></div>
+    <div class="sbox"><div class="snum" style="color:var(--green)">${fL(fin)}</div><div class="slbl">Payments Complete</div></div>
+    <div class="sbox"><div class="snum" style="color:var(--red)">${fL(pnd)}</div><div class="slbl">Outstanding</div></div>
+    <div class="sbox"><div class="snum" style="color:var(--amber)">${ec}</div><div class="slbl">Expiry Alerts</div></div>`;
+}
+
+function renderMouCharts(){
+  const d = getMouFiltered().sort((a,b)=>b.value_lakhs-a.value_lakhs).slice(0,15);
+  dch('ch-bar');
+  charts['ch-bar']=new Chart(G('ch-bar').getContext('2d'),{type:'bar',data:{labels:d.map(x=>x.cpse),datasets:[{data:d.map(x=>x.value_lakhs),backgroundColor:d.map(x=>x.fy==='2526'?'rgba(245,166,35,.65)':'rgba(34,197,94,.65)'),borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`₹${c.raw.toFixed(2)}L`}}},scales:{x:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#f0f6ff',font:{size:10}}}}}});
+
+  // Payment donut
+  let fin=0,part=0,pend=0;
+  mouAll.forEach(x=>{ const p=payBadge(x.payment_status); if(p.cls==='gr')fin+=x.value_lakhs; else if(p.cls==='am')part+=x.value_lakhs; else pend+=x.value_lakhs; });
+  dch('ch-pay');
+  charts['ch-pay']=new Chart(G('ch-pay').getContext('2d'),{type:'doughnut',data:{labels:['Final Received','Partial','Pending'],datasets:[{data:[+fin.toFixed(2),+part.toFixed(2),+pend.toFixed(2)],backgroundColor:['rgba(34,197,94,.7)','rgba(245,158,11,.7)','rgba(239,68,68,.7)'],borderWidth:0}]},options:{responsive:true,cutout:'62%',plugins:{legend:{labels:{color:'#8faac8',font:{size:10}}}}}});
+
+  // Timeline
+  const mths={};
+  mouAll.forEach(x=>{ if(!x.mou_date) return; const p=x.mou_date.split('-'); if(p.length<3) return; const dt=new Date(+p[2],+p[1]-1,+p[0]); const k=dt.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}); if(!mths[k])mths[k]={d:dt,v25:0,v26:0}; if(x.fy==='2526')mths[k].v25+=x.value_lakhs; else mths[k].v26+=x.value_lakhs; });
+  const ms=Object.entries(mths).sort((a,b)=>a[1].d-b[1].d);
+  dch('ch-time');
+  charts['ch-time']=new Chart(G('ch-time').getContext('2d'),{type:'bar',data:{labels:ms.map(x=>x[0]),datasets:[{label:'FY 25-26',data:ms.map(x=>x[1].v25),backgroundColor:'rgba(245,166,35,.6)',borderRadius:2},{label:'FY 26-27',data:ms.map(x=>x[1].v26),backgroundColor:'rgba(34,197,94,.6)',borderRadius:2}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8faac8',font:{size:10}}}},scales:{x:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}},y:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}}}}});
+}
+
+// ═══════════════════════ TAB 2 ════════════════════════════════
+document.querySelectorAll('[data-uct]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-uct]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); UCT=b.dataset.uct; renderUC();
+});
+
+function renderUC(){
+  const data = (ucData[UCT]||[]).slice().sort((a,b)=>b.value_lakhs-a.value_lakhs);
+  G('pri-list').innerHTML = data.slice(0,5).map(x=>`<div class="pri-i"><span class="pi-n">${x.cpse}</span><span class="pi-v">${fL(x.value_lakhs)}</span></div>`).join('');
+  G('uc-cards').innerHTML = data.map(x=>{
+    const rb=remBadge(x.remark);
+    return `<div class="mcard"><div class="ct"><div class="cname">${x.cpse}</div><div class="cval">${(x.value_lakhs>=100)?`${(x.value_lakhs/100).toFixed(2)}<small>Crore</small>`:`${x.value_lakhs.toFixed(2)}<small>Lakhs</small>`}</div></div>
+    <div class="cloc">📍 ${x.locations||'Pan India'}</div>
+    <div class="cmeta"><span class="bdg ${rb.cls}">${rb.lbl}</span></div></div>`;
+  }).join('');
+
+  const stages={'Followup Active':0,'Proposal Submitted':0,'To Be Signed':0,'Denied':0,'No Status':0};
+  data.forEach(x=>{ const rb=remBadge(x.remark); stages[rb.lbl]=(stages[rb.lbl]||0)+x.value_lakhs; });
+  dch('ch-stage');
+  charts['ch-stage']=new Chart(G('ch-stage').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(stages),datasets:[{data:Object.values(stages),backgroundColor:['rgba(245,158,11,.7)','rgba(59,130,246,.7)','rgba(249,115,22,.7)','rgba(239,68,68,.5)','rgba(100,120,150,.5)'],borderWidth:0}]},options:{responsive:true,cutout:'55%',plugins:{legend:{labels:{color:'#8faac8',font:{size:10}}}}}});
+
+  const top8=data.slice(0,8);
+  dch('ch-ucbar');
+  charts['ch-ucbar']=new Chart(G('ch-ucbar').getContext('2d'),{type:'bar',data:{labels:top8.map(x=>x.cpse),datasets:[{data:top8.map(x=>x.value_lakhs),backgroundColor:'rgba(59,130,246,.6)',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#f0f6ff',font:{size:10}}}}}});
+}
+
+// ═══════════════════════ TAB 3 ════════════════════════════════
+function renderPartners(){
+  let d=[...partnerData];
+  const tf=G('type-f')?.value; if(tf)d=d.filter(x=>x.type===tf);
+  const q=(G('pt-q')?.value||'').toLowerCase(); if(q)d=d.filter(x=>(x.company||'').toLowerCase().includes(q)||(x.city||'').toLowerCase().includes(q));
+  d.sort((a,b)=>b.csr_lakhs-a.csr_lakhs);
+  const c=G('pt-cards');
+  if(!d.length){c.innerHTML='<div class="empty"><div class="ei">🏢</div>No partners found</div>';return;}
+  c.innerHTML=d.map(x=>`<div class="pcard">
+    <div class="pc-t">
+      <div class="pc-n">${x.company}</div>
+      <div style="text-align:right"><div style="font-family:'Bebas Neue';font-size:18px;color:var(--gold)">${x.csr_lakhs?fL(x.csr_lakhs):'—'}</div><div style="font-size:9px;color:var(--txt3)">CSR Budget</div></div>
+    </div>
+    <div class="pc-m">📍 ${x.city||'—'} &nbsp;|&nbsp; <span class="bdg ${x.type==='CPSE'?'bl':'or'}" style="font-size:8px">${x.type||'—'}</span></div>
+    <div class="pc-row">
+      ${x.profit_lakhs?`<div class="pc-info"><div class="pc-lbl">3yr Profit</div><div class="pc-num">₹${Number(x.profit_lakhs).toLocaleString('en-IN')}L</div></div>`:''}
+      ${x.csr_lakhs?`<div class="pc-info"><div class="pc-lbl">Available CSR</div><div class="pc-num" style="color:var(--green)">${fL(x.csr_lakhs)}</div></div>`:''}
+    </div>
+    ${(x.contact||x.designation||x.mobile)?`<div class="contact-row">${x.contact?`👤 ${x.contact}`:''} ${x.designation?`| ${x.designation}`:''} ${x.mobile?`| 📞 ${x.mobile}`:''}</div>`:''}
+  </div>`).join('');
+}
+
+function renderPartnerCharts(){
+  const top10=[...partnerData].sort((a,b)=>b.csr_lakhs-a.csr_lakhs).filter(x=>x.csr_lakhs>0).slice(0,10);
+  dch('ch-ptbar');
+  charts['ch-ptbar']=new Chart(G('ch-ptbar').getContext('2d'),{type:'bar',data:{labels:top10.map(x=>x.company.length>22?x.company.substring(0,22)+'…':x.company),datasets:[{data:top10.map(x=>x.csr_lakhs),backgroundColor:'rgba(245,166,35,.55)',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#f0f6ff',font:{size:9}}}}}});
+  const cpse=partnerData.filter(x=>x.type==='CPSE').length;
+  const priv=partnerData.filter(x=>x.type==='PRIVATE').length;
+  dch('ch-ptdnt');
+  charts['ch-ptdnt']=new Chart(G('ch-ptdnt').getContext('2d'),{type:'doughnut',data:{labels:['CPSE','Private'],datasets:[{data:[cpse,priv],backgroundColor:['rgba(59,130,246,.7)','rgba(249,115,22,.7)'],borderWidth:0}]},options:{responsive:true,cutout:'58%',plugins:{legend:{labels:{color:'#8faac8',font:{size:11}}}}}});
+  G('b-pt').textContent=partnerData.length;
+}
+
+// ═══════════════════════ TAB 4 ════════════════════════════════
+function renderSummary(sm, t26, tuc26, tuc25){
+  const TARGET=10000; const pct=Math.min(t26/TARGET,1);
+  // Gauge
+  const cx=100,cy=100,r=76,sw=14;
+  const xy=a=>({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)});
+  const s=xy(-Math.PI),e=xy(0);
+  const m1=xy(-Math.PI+Math.PI*.33),m2=xy(-Math.PI+Math.PI*.67);
+  const na=-Math.PI+pct*Math.PI,np=xy(na);
+  const col=pct<.33?'#ef4444':pct<.67?'#f59e0b':'#22c55e';
+  G('gauge-svg').innerHTML=`
+    <path d="M${s.x},${s.y} A${r},${r} 0 0 1 ${m1.x},${m1.y}" fill="none" stroke="#7f1d1d" stroke-width="${sw}"/>
+    <path d="M${m1.x},${m1.y} A${r},${r} 0 0 1 ${m2.x},${m2.y}" fill="none" stroke="#78350f" stroke-width="${sw}"/>
+    <path d="M${m2.x},${m2.y} A${r},${r} 0 0 1 ${e.x},${e.y}" fill="none" stroke="#14532d" stroke-width="${sw}"/>
+    <path d="M${s.x},${s.y} A${r},${r} 0 0 1 ${np.x},${np.y}" fill="none" stroke="${col}" stroke-width="${sw}" opacity=".85"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="${col}"/>
+    <line x1="${cx}" y1="${cy}" x2="${np.x}" y2="${np.y}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+    <text x="${cx-r-2}" y="${cy+4}" text-anchor="end" fill="#3d5a7a" font-size="8" font-family="IBM Plex Sans">₹0</text>
+    <text x="${cx+r+2}" y="${cy+4}" text-anchor="start" fill="#3d5a7a" font-size="8" font-family="IBM Plex Sans">100Cr</text>`;
+  G('g-val').textContent=fL(t26);
+  G('g-rem').textContent=`₹${((TARGET-t26)/100).toFixed(2)} Cr still needed`;
+
+  // Waterfall
+  const stages=[
+    {lbl:'UC 2026-27 (If All Converted)',val:tuc26,col:'var(--gold)'},
+    {lbl:'MoU Signed FY 2026-27 ✓',val:t26,col:'var(--green)',hl:true},
+    {lbl:'Remaining Target Gap',val:Math.max(0,TARGET-t26),col:'var(--red)'},
+    {lbl:'Carryforward Pipeline 2025-26',val:tuc25,col:'var(--amber)'},
+  ];
+  const mx=Math.max(...stages.map(x=>x.val),TARGET);
+  G('wfall').innerHTML=stages.map(s=>`<div class="wfi ${s.hl?'hl':''}">
+    <span class="wfl">${s.lbl}</span>
+    <div class="wfbw"><div class="wfb" style="width:${(s.val/mx*100).toFixed(1)}%;background:${s.col}"></div></div>
+    <span class="wfv">${fL(s.val)}</span>
+    <span class="wfp">${(s.val/TARGET*100).toFixed(1)}%</span>
+  </div>`).join('');
+
+  // Summary table
+  G('sum-tbl').innerHTML=`<thead><tr><th>Stage</th><th>FY</th><th>₹ Lakhs</th><th>₹ Crore</th><th>% of ₹100Cr</th></tr></thead><tbody>`+
+    (sm||[]).map(r=>{const v=r.value_lakhs||0;return`<tr><td style="font-weight:600">${r.status}</td><td><span style="font-size:9.5px;color:var(--txt3)">${r.fy}</span></td><td style="font-family:'IBM Plex Mono';color:var(--gold)">${v.toFixed(2)}</td><td style="font-family:'IBM Plex Mono'">₹${(v/100).toFixed(2)} Cr</td><td><span class="bdg ${v>=TARGET?'gr':'am'}">${(v/TARGET*100).toFixed(1)}%</span></td></tr>`;}).join('')+`</tbody>`;
+
+  // Payment health
+  let fin2=0,part2=0,pend2=0;
+  mouAll.forEach(x=>{ const p=payBadge(x.payment_status); if(p.cls==='gr')fin2++; else if(p.cls==='am')part2++; else pend2++; });
+  dch('ch-ph');
+  charts['ch-ph']=new Chart(G('ch-ph').getContext('2d'),{type:'pie',data:{labels:['Final Received','Partial','Pending'],datasets:[{data:[fin2,part2,pend2],backgroundColor:['rgba(34,197,94,.7)','rgba(245,158,11,.7)','rgba(239,68,68,.7)'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8faac8',font:{size:10}}}}}});
+
+  // Timeline
+  const mths2={};
+  mouAll.forEach(x=>{ if(!x.mou_date)return; const p=x.mou_date.split('-'); if(p.length<3)return; const dt=new Date(+p[2],+p[1]-1,+p[0]); const k=dt.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}); if(!mths2[k])mths2[k]={d:dt,v:0}; mths2[k].v+=x.value_lakhs; });
+  const ms2=Object.entries(mths2).sort((a,b)=>a[1].d-b[1].d);
+  dch('ch-tl');
+  charts['ch-tl']=new Chart(G('ch-tl').getContext('2d'),{type:'line',data:{labels:ms2.map(x=>x[0]),datasets:[{label:'₹ Lakhs Signed',data:ms2.map(x=>x[1].v),borderColor:'var(--gold)',backgroundColor:'rgba(245,166,35,.1)',tension:.4,pointBackgroundColor:'var(--gold)',fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}},y:{grid:{color:'rgba(26,48,80,.5)'},ticks:{color:'#8faac8',font:{size:9}}}}}});
+}
+
+// ═══════════════════════ TAB 5 ════════════════════════════════
+function buildAlerts(){
+  allAlerts=[];
+  const t26=mouAll.filter(x=>x.fy==='2627').reduce((a,x)=>a+x.value_lakhs,0);
+  const pct=(t26/10000*100).toFixed(1);
+  const isR=+pct<30, isA=+pct>=30&&+pct<60;
+  const hb=G('hbox');
+  hb.style.background=isR?'rgba(239,68,68,.06)':isA?'rgba(245,158,11,.06)':'rgba(34,197,94,.06)';
+  hb.style.borderColor=isR?'var(--red)':isA?'var(--amber)':'var(--green)';
+  hb.style.color=isR?'var(--red)':isA?'var(--amber)':'var(--green)';
+  const msg=isR?'🔴 CRITICAL — Accelerate MoU closures immediately':isA?'🟡 ON TRACK — Maintain current pace':'🟢 AHEAD OF TARGET — Secure renewals';
+  hb.innerHTML=`Pipeline Health: <strong>${pct}%</strong> &nbsp;|&nbsp; ${msg} &nbsp;|&nbsp; ${fL(t26)} secured of ₹100 Cr target`;
+
+  // 1. Expiring MoUs
+  mouAll.filter(x=>['expiring','expired'].includes(x.status)).forEach(x=>{
+    allAlerts.push({type:'ur',ico:'🔴',title:`MoU Expiring — ${x.cpse}`,desc:`Signed: ${x.mou_date||'N/A'} | Expires: ${x.expiry||'N/A'} (${x.days_left<0?'EXPIRED':x.days_left+' days left'}). Prepare Utilisation Certificate, Project Report, Demand Sheet & Renewal Invoice immediately.`,amt:x.value_lakhs,pri:'ur'});
+  });
+  // 2. Payment follow-ups
+  mouAll.filter(x=>payBadge(x.payment_status).cls!=='gr').forEach(x=>{
+    allAlerts.push({type:'hi',ico:'🟡',title:`Payment Follow-up — ${x.cpse}`,desc:`Status: "${x.payment_status||'No payment recorded'}". Outstanding ₹${(x.value_lakhs||0).toFixed(2)}L. Follow up with CPSE Finance/CSR team.`,amt:x.value_lakhs,pri:'hi'});
+  });
+  // 3. Stale prospects
+  (ucData['2526']||[]).filter(x=>x.remark&&x.remark.includes('Submitted')&&!x.remark.toLowerCase().includes('followup')&&!remBadge(x.remark).lbl.includes('Denied')).forEach(x=>{
+    allAlerts.push({type:'me',ico:'🟠',title:`Stale Prospect — ${x.cpse}`,desc:`Proposal submitted with no recorded followup. Potential: ₹${(x.value_lakhs||0).toFixed(2)}L. Schedule outreach call immediately.`,amt:x.value_lakhs,pri:'me'});
+  });
+  // 4. Top partner opportunities
+  partnerData.filter(x=>x.csr_lakhs>100).sort((a,b)=>b.csr_lakhs-a.csr_lakhs).slice(0,3).forEach(x=>{
+    const contact=x.contact?` Contact: ${x.contact}${x.mobile?', '+x.mobile:''}`:' (contact details in Potential Partners tab)';
+    allAlerts.push({type:'op',ico:'🟢',title:`CSR Opportunity — ${x.company}`,desc:`Available CSR budget: ₹${(x.csr_lakhs||0).toFixed(2)}L. ${x.city?'Location: '+x.city+'.':''} Type: ${x.type||'—'}.${contact}`,amt:x.csr_lakhs,pri:'me'});
+  });
+  G('b-ac').textContent=allAlerts.filter(x=>x.type==='ur').length;
+  filtAlerts('all',null);
+}
+
+document.querySelectorAll('[data-af]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-af]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); ALF=b.dataset.af; filtAlerts(ALF,null);
+});
+
+function filtAlerts(f,btn){
+  ALF=f;
+  const fd=f==='all'?allAlerts:allAlerts.filter(x=>x.type===f);
+  const c=G('al-cnt');
+  if(!fd.length){c.innerHTML='<div class="empty"><div class="ei">✅</div>No alerts in this category</div>';return;}
+  c.innerHTML=fd.map((a,i)=>{
+    const k=`al_${i}_${norm(a.title).substring(0,16)}`;
+    const done=localStorage.getItem(k)==='1';
+    return`<div class="alc ${a.type} ${done?'done':''}" id="alc${i}">
+      <div class="al-ic">${a.ico}</div>
+      <div class="al-b">
+        <div class="al-t">${a.title}</div>
+        <div class="al-d">${a.desc}</div>
+        <div class="al-ac">
+          <span class="apr ${a.pri}">${a.pri==='ur'?'URGENT':a.pri==='hi'?'HIGH':'MEDIUM'}</span>
+          ${a.amt?`<span class="al-amt">₹${a.amt.toFixed(2)}L</span>`:''}
+          <button class="abtn ${done?'done':''}" onclick="togAl('${k}','alc${i}')">${done?'✓ Actioned':'Mark as Actioned'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togAl(k,id){
+  const done=localStorage.getItem(k)==='1';
+  localStorage.setItem(k,done?'0':'1');
+  const el=G(id), btn=el.querySelector('.abtn');
+  if(!done){el.classList.add('done');btn.textContent='✓ Actioned';btn.classList.add('done');}
+  else{el.classList.remove('done');btn.textContent='Mark as Actioned';btn.classList.remove('done');}
+}
+
+// ═══════════════════════ MODAL ════════════════════════════════
+const STEPS=['Prepare Project Completion Report','Prepare Utilisation Certificate (UC)','Generate Demand Sheet for Renewal','Draft Renewal Invoice','Send MoU Renewal Proposal to Company','Follow up with CSR Head / Nodal Officer'];
+
+function openMo(cpse,mDate,expiry,daysLeft){
+  G('mo-co').textContent='⚠ '+cpse;
+  G('mo-mt').textContent=`MoU Date: ${mDate||'N/A'} | Expires: ${expiry||'N/A'}`;
+  G('mo-ei').innerHTML=`
+    <div><div class="ml">Signed</div><div class="mv">${mDate||'—'}</div></div>
+    <div><div class="ml">Expires</div><div class="mv">${expiry||'—'}</div></div>
+    <div><div class="ml">Days Left</div><div class="mv">${+daysLeft<0?'EXPIRED':daysLeft+' days'}</div></div>`;
+  const bk=`mo_${norm(cpse).substring(0,16)}`;
+  G('mo-st').innerHTML=STEPS.map((s,i)=>{
+    const sk=`${bk}_s${i}`, done=localStorage.getItem(sk)==='1';
+    return`<div class="mst ${done?'done':''}" id="ms${i}" onclick="togStep('${sk}','ms${i}')">
+      <input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()">
+      <span class="mst-t">Step ${i+1}: ${s}</span>
+    </div>`;
+  }).join('');
+  G('mo').classList.add('open');
+}
+function togStep(k,id){
+  const done=localStorage.getItem(k)==='1';
+  localStorage.setItem(k,done?'0':'1');
+  const el=G(id); if(!done){el.classList.add('done');el.querySelector('input').checked=true;} else{el.classList.remove('done');el.querySelector('input').checked=false;}
+}
+function closeMo(){ G('mo').classList.remove('open'); }
+
+// ═══════════════════════ TAB SWITCHING ════════════════════════
+document.querySelectorAll('.ni').forEach(n => n.onclick = () => {
+  const id = n.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  G(id).classList.add('active');
+  n.classList.add('active');
+});
+</script>
+</body>
+</html>
